@@ -1,0 +1,143 @@
+---
+title: "Interacting with APIs: Covid19api"
+author: "Yan Liu"
+date: "2021/9/30"
+output: 
+   github_document:
+    toc: true
+    html_preview: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This document is a vignette to show how to retrieve data from an [API](https://covid19api.com/). To demonstrate, I'll be interacting with the API. I'm going to build a few functions to interact with some of the endpoints and explore some of the data I can retrieve.
+
+As a note, some of these functions return data at a team level. Some of the APIs use the franchise ID number, while some use the most recent team ID to select a specific team's endpoint. For that reason, if you use any of my functions I recommend supplying a full team name (e.g. `"Montréal Canadiens"`). My functions will decode them to the appropriate ID number.
+
+# Requirements
+
+To use the functions for interacting with the NHL API, I used the following packages:
+
+- [`tidyverse`](https://www.tidyverse.org/): tons of useful features for data manipulation and visualization
+- [`jsonlite`](https://cran.r-project.org/web/packages/jsonlite/): API interaction
+
+In addition to those packages, I used the following packages in the rest of the document:
+
+- [`cowplot`](https://cran.r-project.org/web/packages/cowplot/index.html): extra functionality for `ggplot2`
+- [`imager`](https://cran.r-project.org/web/packages/imager/): loading in images
+- [`broom`](https://cran.r-project.org/web/packages/broom/vignettes/broom.html):
+tidying up a regression output for display
+- [`knitr`](https://cran.r-project.org/web/packages/knitr/index.html): displaying tables in a markdown friendly way
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+library(httr)
+library(jsonlite)
+library(tidyverse)
+library(dbplyr)
+library(rmarkdown)
+library(lubridate)
+```
+
+# API Interaction Functions
+
+Here is where I define the functions to interact with the [Country Names](https://api.covid19api.com/countries) and [Covid cases summary](https://api.covid19api.com/summary) as well as some helper functions.
+
+## `Find country names`
+Pattern match of country names. Multiple names can be a input as a vector.
+```{r f1, echo=FALSE}
+match_country_name <- function (name){
+  #get the list of available countries
+  countries <- fromJSON("https://api.covid19api.com/countries")
+  country_names<-countries$Country
+  name_all <- countries[grep(paste(name,collapse="|"), country_names,ignore.case=TRUE),]
+  return(name_all)
+}
+```
+
+## `Total cases`
+Total confirmed cases and deaths today from selected countries, sorted by confirmed cases from high to low.
+```{r f2, echo=FALSE}
+summary_total <- function(country = "all"){
+     # Get data from the summary endpoint
+    summary <- fromJSON("https://api.covid19api.com/summary")
+     # Select the data part from JSON
+    all <- summary$Countries
+    
+    if (country[1] != "all"){
+   
+    # match input country names to get their unique Slug name
+    country_slug <- match_country_name(country)$Slug
+  
+    if(length(country_slug) == 0){
+      message <- paste("ERROR: Argument for country was not found.",
+                       "Try summary_total('all') to find the country you're looking for.")
+      stop(message)
+    }
+    else {
+      # Filter the selected countries
+      select_country <- all %>% 
+      filter(Slug %in% country_slug) %>% 
+      select(Country,TotalConfirmed,TotalDeaths,Date) %>% 
+      mutate(Date = as_date(Date)) %>% 
+      arrange(desc(TotalConfirmed))
+    }
+  }
+  
+  else {
+    select_country <- all %>% 
+      select(Country,TotalConfirmed,TotalDeaths,Date) %>% 
+      mutate(Date = as_date(Date)) %>% 
+      arrange(desc(TotalConfirmed))
+  }
+  return(select_country)
+}
+```
+
+## `New cases`
+New cases and death by days in a given period of one country, enter start and end date as YYYY-MM-DD.
+```{r f3, echo=FALSE}
+new_period <- function(country,start,end){
+  
+  # match input country names to get their unique Slug name
+  country_slug <- match_country_name(country)$Slug
+  
+  
+  # Error message for invalid input of country names
+  if(length(country_slug) == 0){
+    message <- paste("ERROR: Argument for country was not found. Try summary_total('all') to find the country you're looking for:",
+                     )
+    stop(message)
+  }
+  
+  # if country name has multiple hits, ask the user select one from the list of possible county names
+  else if(length(country_slug) >1){
+    message <- paste("ERROR: Argument for country was not unique.",
+                     "Please select one from the list:",
+                     paste(grep(country, country_names,ignore.case=TRUE,value=TRUE),collapse = '; '))
+    stop(message)
+  }
+  
+  else {
+    # Get data from the country endpoint
+    all_days <- fromJSON(paste("https://api.covid19api.com/total/country", country_slug,sep = "/"))
+    
+    period <- all_days %>% 
+      select(Country, Confirmed, Deaths, Date) %>% 
+      mutate(Date = as_date(Date)) %>% 
+      filter(Date >= ymd(start)-1  & Date <= end ) %>% 
+      mutate(new_case = Confirmed - lag(Confirmed)) %>% 
+      mutate(new_death = Deaths - lag(Deaths)) %>% 
+      slice(-1L) %>% 
+      select(Country,Date,new_case,new_death)
+  }
+
+  return(period)
+}
+```
+
+# Data Exploration
+Now that we can interact with a few of the endpoints of the Covid API, let's get some data from them.
+
+
+
