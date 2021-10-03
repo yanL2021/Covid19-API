@@ -73,7 +73,7 @@ Now that we can interact with a few of the endpoints of the Covid API,
 let’s get some data from them.
 
 Bar plot comparing total cases in different countries
-![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
 Total cases per 1000 people in all countries all over the world
 
@@ -85,26 +85,26 @@ draw a world heat map of total confirmed cases per 1000 people
     ## 1 codes from your data failed to match with a country code in the map
     ## 50 codes from the map weren't represented in your data
 
-![](README_files/figure-gfm/unnamed-chunk-25-1.png)<!-- --> draw a world
+![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- --> draw a world
 heat map of mortality rate
 
     ## 191 codes from your data successfully matched countries in the map
     ## 1 codes from your data failed to match with a country code in the map
     ## 50 codes from the map weren't represented in your data
 
-![](README_files/figure-gfm/unnamed-chunk-26-1.png)<!-- --> Distribution
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- --> Distribution
 of total confirmed cases per 1000 people for each country
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
     ## Warning: Removed 4 rows containing non-finite values (stat_bin).
 
-![](README_files/figure-gfm/unnamed-chunk-27-1.png)<!-- --> compare new
+![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- --> compare new
 cases per day in a given period (2021-08-1 to 2021-08-30) among
 different countries
-![](README_files/figure-gfm/unnamed-chunk-28-1.png)<!-- --> scatter plot
+![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- --> scatter plot
 of new cases over a period with 7-day average smooth line in one country
-![](README_files/figure-gfm/unnamed-chunk-29-1.png)<!-- --> \# Wrap-Up
+![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- --> \# Wrap-Up
 
 To summarize everything I did in this vignette, I built functions to
 interact with some of the Covid-19 API endpoints, retrieved some of the
