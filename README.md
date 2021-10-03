@@ -8,19 +8,13 @@ Yan Liu
     -   [`Find country names`](#find-country-names)
     -   [`Total cases`](#total-cases)
     -   [`New cases`](#new-cases)
+    -   [`Average`](#average)
 -   [Data Exploration](#data-exploration)
 
 This document is a vignette to show how to retrieve data from an
 [API](https://covid19api.com/). To demonstrate, I’ll be interacting with
 the API. I’m going to build a few functions to interact with some of the
 endpoints and explore some of the data I can retrieve.
-
-As a note, some of these functions return data at a team level. Some of
-the APIs use the franchise ID number, while some use the most recent
-team ID to select a specific team’s endpoint. For that reason, if you
-use any of my functions I recommend supplying a full team name
-(e.g. `"Montréal Canadiens"`). My functions will decode them to the
-appropriate ID number.
 
 # Requirements
 
@@ -35,14 +29,16 @@ following packages:
 In addition to those packages, I used the following packages in the rest
 of the document:
 
--   [`cowplot`](https://cran.r-project.org/web/packages/cowplot/index.html):
+-   [`httr`](https://cran.r-project.org/web/packages/cowplot/index.html):
     extra functionality for `ggplot2`
--   [`imager`](https://cran.r-project.org/web/packages/imager/): loading
-    in images
--   [`broom`](https://cran.r-project.org/web/packages/broom/vignettes/broom.html):
+-   [`rmarkdown`](https://cran.r-project.org/web/packages/imager/):
+    loading in images
+-   [`lubridate`](https://cran.r-project.org/web/packages/broom/vignettes/broom.html):
     tidying up a regression output for display
--   [`knitr`](https://cran.r-project.org/web/packages/knitr/index.html):
+-   [`countrycode`](https://cran.r-project.org/web/packages/knitr/index.html):
     displaying tables in a markdown friendly way
+-   [`rworldmap`](https://cran.r-project.org/web/packages/imager/):
+    loading in images
 
 # API Interaction Functions
 
@@ -66,7 +62,58 @@ by confirmed cases from high to low.
 New cases and death by days in a given period of one country, enter
 start and end date as YYYY-MM-DD.
 
+## `Average`
+
+Calculate the average new case number in the past n days from the day of
+first case until today. The default n is
+
 # Data Exploration
 
 Now that we can interact with a few of the endpoints of the Covid API,
 let’s get some data from them.
+
+Bar plot comparing total cases in different countries
+![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+
+Total cases per 1000 people in all countries all over the world
+
+    ## Warning in countrycode_convert(sourcevar = sourcevar, origin = origin, destination = dest, : Some values were not matched unambiguously: AN, XK
+
+draw a world heat map of total confirmed cases per 1000 people
+
+    ## 191 codes from your data successfully matched countries in the map
+    ## 1 codes from your data failed to match with a country code in the map
+    ## 50 codes from the map weren't represented in your data
+
+![](README_files/figure-gfm/unnamed-chunk-25-1.png)<!-- --> draw a world
+heat map of mortality rate
+
+    ## 191 codes from your data successfully matched countries in the map
+    ## 1 codes from your data failed to match with a country code in the map
+    ## 50 codes from the map weren't represented in your data
+
+![](README_files/figure-gfm/unnamed-chunk-26-1.png)<!-- --> Distribution
+of total confirmed cases per 1000 people for each country
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+    ## Warning: Removed 4 rows containing non-finite values (stat_bin).
+
+![](README_files/figure-gfm/unnamed-chunk-27-1.png)<!-- --> compare new
+cases per day in a given period (2021-08-1 to 2021-08-30) among
+different countries
+![](README_files/figure-gfm/unnamed-chunk-28-1.png)<!-- --> scatter plot
+of new cases over a period with 7-day average smooth line in one country
+![](README_files/figure-gfm/unnamed-chunk-29-1.png)<!-- --> \# Wrap-Up
+
+To summarize everything I did in this vignette, I built functions to
+interact with some of the Covid-19 API endpoints, retrieved some of the
+data, and explored it using tables, numerical summaries, and data
+visualization.
+
+I found some unsurprising things, like shots per game and shooting
+percentage are related to win percentage. I also found some surprising
+(to me) things, namely penalty minutes per game has a quadratic
+relationship with win percentage.
+
+Most importantly, I hope my code helps you with interacting with APIs!
