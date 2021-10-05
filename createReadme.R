@@ -3,7 +3,7 @@
 # purpose: Render covidVignette.Rmd as a .md file called README.md for my repo.
 
 rmarkdown::render(
-  input="project1.Rmd",
+  input="project1_v2.Rmd",
   output_format = "github_document",
   output_file = "README.md",
   runtime = "static",

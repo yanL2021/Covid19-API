@@ -1,61 +1,50 @@
-Interacting with APIs: Covid19api
-================
-Yan Liu
-2021/9/30
+---
+title: "Interacting with APIs: Covid19api"
+author: "Yan Liu"
+date: "2021/9/30"
+output: 
+   github_document:
+    toc: true
+    html_preview: false
+---
 
--   [Requirements](#requirements)
--   [API Interaction Functions](#api-interaction-functions)
-    -   [`Find country names`](#find-country-names)
-    -   [`Total cases`](#total-cases)
-    -   [`New cases`](#new-cases)
-    -   [`Average`](#average)
--   [Data Exploration](#data-exploration)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
 
-This document is a vignette to show how to retrieve data from an
-[API](https://covid19api.com/). To demonstrate, I’ll be interacting with
-the API. I’m going to build a few functions to interact with some of the
-endpoints and explore some of the data I can retrieve.
+This document is a vignette to show how to retrieve data from an [API](https://covid19api.com/). To demonstrate, I'll be interacting with the API. I'm going to build a few functions to interact with some of the endpoints and explore some of the data I can retrieve.
 
 # Requirements
 
-To use the functions for interacting with the Covid19 API, I used the
-following packages:
+To use the functions for interacting with the Covid19 API, I used the following packages:
 
--   [`tidyverse`](https://www.tidyverse.org/): Tons of useful features
-    for data manipulation and visualization
--   [`jsonlite`](https://cran.r-project.org/web/packages/jsonlite/): API
-    interaction
+- [`tidyverse`](https://www.tidyverse.org/): Tons of useful features for data manipulation and visualization
+- [`jsonlite`](https://cran.r-project.org/web/packages/jsonlite/): API interaction
 
-In addition to those packages, I used the following packages in the rest
-of the document:
+In addition to those packages, I used the following packages in the rest of the document:
 
--   [`httr`](https://cran.r-project.org/web/packages/httr/index.html):
-    Useful tools for working with HTTP
--   [`rmarkdown`](https://cran.r-project.org/web/packages/rmarkdown):
-    Convert R Markdown documents
--   [`lubridate`](https://lubridate.tidyverse.org/): Work with Date-time
-    data
--   [`countrycode`](https://cran.r-project.org/web/packages/countrycode/):
-    Standardize country names and convert different types of country
-    codes
--   [`rworldmap`](https://cran.r-project.org/web/packages/rworldmap/):
-    Enables mapping of country level data
+- [`httr`](https://cran.r-project.org/web/packages/httr/index.html): Useful tools for working with HTTP
+- [`rmarkdown`](https://cran.r-project.org/web/packages/rmarkdown): Convert R Markdown documents
+- [`lubridate`](https://lubridate.tidyverse.org/): Work with Date-time data
+- [`countrycode`](https://cran.r-project.org/web/packages/countrycode/): Standardize country names and convert different types of country codes
+- [`rworldmap`](https://cran.r-project.org/web/packages/rworldmap/): Enables mapping of country level data
 
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+library(httr)
+library(jsonlite)
+library(tidyverse)
+library(rmarkdown)
+library(lubridate)
+library(countrycode)
+library(rworldmap)
+```
 # API Interaction Functions
 
-Here is where I define the functions to interact with the [Country
-Names](https://api.covid19api.com/countries) and [Covid cases
-summary](https://api.covid19api.com/summary) as well as some helper
-functions.
+Here is where I define the functions to interact with the [Country Names](https://api.covid19api.com/countries) and [Covid cases summary](https://api.covid19api.com/summary) as well as some helper functions.
 
 ## `Find country names`
-
-This is a helper function to help matching un-standardized country names
-from user input to the standardized names provided API. We use pattern
-match function and allow users to input multiple names as a vector in
-one time.
-
-``` r
+This is a helper function to help matching un-standardized country names from user input to the standardized names provided API. We use pattern match function and allow users to input multiple names as a vector in one time.
+```{r f1}
 match_country_name <- function (name) {
   #get the list of available countries
   countries <- fromJSON("https://api.covid19api.com/countries")
@@ -68,18 +57,9 @@ match_country_name <- function (name) {
 ```
 
 ## `Total cases`
+This function retrieves data from "summary" endpoint. We can get the total number of confirmed cases and deaths from the first case until today in selected countries, sorted by number confirmed cases from high to low. If no specific country name is selected, the function will give the whole list of all available countries and their data. If the input country name is not unique, the function will give the results of all possible matched countries. If the input name cannot be matched to any country, it will gives error message to ask user check the name from the list of all countries.
 
-This function retrieves data from “summary” endpoint. We can get the
-total number of confirmed cases and deaths from the first case until
-today in selected countries, sorted by number confirmed cases from high
-to low. If no specific country name is selected, the function will give
-the whole list of all available countries and their data. If the input
-country name is not unique, the function will give the results of all
-possible matched countries. If the input name cannot be matched to any
-country, it will gives error message to ask user check the name from the
-list of all countries.
-
-``` r
+```{r f2}
 summary_total <- function(country = "all") {
   # Get data from the summary endpoint
   summary <- fromJSON("https://api.covid19api.com/summary")
@@ -122,16 +102,8 @@ summary_total <- function(country = "all") {
 ```
 
 ## `New cases`
-
-This function retrieves data from “country” endpoint. The original data
-gives cumulative number of confirmed cases and death on all days. I
-wrote this function to calculate number of new cases and death on each
-day in a given period of one country. Enter start and end date as
-YYYY-MM-DD, ranging from 2010-01-22 untill today. Country name can only
-be one unique hit. If not, an error message will be given and provides
-the list of possible names.
-
-``` r
+This function retrieves data from "country" endpoint. The original data gives cumulative number of confirmed cases and death on all days. I wrote this function to calculate number of new cases and death on each day in a given period of one country. Enter start and end date as YYYY-MM-DD, ranging from 2010-01-22 untill today. Country name can only be one unique hit. If not, an error message will be given and provides the list of possible names.
+```{r f3}
 new_period <- function(country, start, end) {
   # match input country names to get their unique Slug name
   country_slug <- match_country_name(country)$Slug
@@ -190,16 +162,8 @@ new_period <- function(country, start, end) {
 ```
 
 ## `Average`
-
-Since cases may not be reported daily (etc. skipping weekend or holiday)
-in all country, the average number of new cases in \~7 days could be a
-better way to show the trend of increase and better for making a smooth
-line in a time series plot, than daily new cases data. This function
-calculate the average new case number in the past n days from the day of
-first case until today. The default n is 7, but can be modified to be
-other numbers.
-
-``` r
+Since cases may not be reported daily (etc. skipping weekend or holiday) in all country, the average number of new cases in ~7 days could be a better way to show the trend of increase and better for making a smooth line in a time series plot, than daily new cases data. This function calculate the average new case number in the past n days from the day of first case until today. The default n is 7, but can be modified to be other numbers. 
+```{r f4}
 new_average <- function(country, window = 7) {
   # match input country names to get their unique Slug name
   country_slug <- match_country_name(country)$Slug
@@ -256,19 +220,12 @@ new_average <- function(country, window = 7) {
 ```
 
 # Data Exploration
+Now that we can interact with a few of the endpoints of the Covid API using the functions I wrote above.
 
-Now that we can interact with a few of the endpoints of the Covid API
-using the functions I wrote above.
+First, let's have a global look of the confirmed cases in a world map. 
 
-First, let’s have a global look of the confirmed cases in a world map.
-
-I used per capita data to better show the outbreak level of COVID cases
-all over the world, rather than using the absolute number. Population
-data is retrieved from `world_bank_pop` from `tidyr`. ISO2 country code
-from the COVID API is converted to ISO3 before merging to the population
-data.
-
-``` r
+I used per capita data to better show the outbreak level of COVID cases all over the world, rather than using the absolute number. Population data is retrieved from `world_bank_pop` from `tidyr`. ISO2 country code from the COVID API is converted to ISO3 before merging to the population data. 
+```{r}
 #get the list of available countries
 countries <- fromJSON("https://api.covid19api.com/countries")
 # Get population data in 2017 from world bank
@@ -305,16 +262,10 @@ total_summary <- total_all_pop %>%
   )
 ```
 
-Among 184 countries with more than 100 confirmed COVID-19 cases, the
-number of cases per 1000 people ranges from 0 to 225. The country with
-the largest number of confirmed cases is United States of America, where
-134 COVID cases has been confirmed per 1000 people.
+Among `r total_summary$n_country` countries with more than 100 confirmed COVID-19 cases, the number of cases per 1000 people ranges from `r round(total_summary$min_case,0)` to `r round(total_summary$max_case,0)`. The country with the largest number of confirmed cases is `r total_all_pop[1,'Country']`, where `r round(total_all_pop[1,'cases_per1k'],0)` COVID cases has been confirmed per 1000 people.
 
-The distribution of total confirmed cases per 1000 people.The
-distribution of highly right skewed, suggesting that a few countries has
-been hit by the pandemic badly.
-
-``` r
+The distribution of total confirmed cases per 1000 people.The distribution of highly right skewed, suggesting that a few countries has been hit by the pandemic badly. 
+```{r fig1}
 p1 <- ggplot(total_all_pop, aes(x=cases_per1k)) + 
   geom_histogram(color='blue',fill='lightblue')+
   ggtitle('Distribution of total confirmed cases per 1000 people per country')+
@@ -322,13 +273,9 @@ p1 <- ggplot(total_all_pop, aes(x=cases_per1k)) +
 p1
 ```
 
-![](README_files/figure-gfm/fig1-1.png)<!-- -->
+I summarized the confirmed cases per capita in a country by continent. Europe has a significant higher confirmed cases overall probobly due to the more comprehensive covid-19 test.
 
-I summarized the confirmed cases per capita in a country by continent.
-Europe has a significant higher confirmed cases overall probobly due to
-the more comprehensive covid-19 test.
-
-``` r
+```{r table1}
 # Get the summary statistics for case_per1k
 total_summary_continent <- total_all_pop %>%
   filter(!is.na(continent)) %>% 
@@ -347,33 +294,12 @@ knitr::kable(total_summary_continent ,
              digits=0)
 ```
 
-| continent |   n | 1st Quartile | Median | 3rd Quartile | Max |
-|:----------|----:|-------------:|-------:|-------------:|----:|
-| Africa    |  54 |            2 |      4 |           12 | 225 |
-| Americas  |  35 |           33 |     45 |           77 | 134 |
-| Asia      |  47 |            9 |     25 |           87 | 195 |
-| Europe    |  43 |           66 |     85 |          116 | 214 |
-| Oceania   |   4 |            2 |      4 |           18 |  57 |
-
-Summary Statistics for confirmed case per 1000 people by continent
-
-To better view the spread of COVID, I drew a country heatmap to show the
-total confirmed cases per 1000 people all over the world in a map. We
-can see that North America and Europe has much more cases per capita
-than East Asia and Australia.
-
-``` r
+To better view the spread of COVID, I drew a country heatmap to show the total confirmed cases per 1000 people all over the world in a map. We can see that North America and Europe has much more cases per capita than East Asia and Australia. 
+```{r fig2}
 # Create data for mapping
 joinData <- joinCountryData2Map(total_all_pop ,
                                 joinCode = "ISO2",
                                 nameJoinColumn = "ISO2")
-```
-
-    ## 183 codes from your data successfully matched countries in the map
-    ## 1 codes from your data failed to match with a country code in the map
-    ## 58 codes from the map weren't represented in your data
-
-``` r
 # Map the data
 case_capita <-
   mapCountryData(
@@ -395,41 +321,17 @@ do.call(
   )
 )
 ```
-
-![](README_files/figure-gfm/fig2-1.png)<!-- --> Then, we calculate the
-mortality rate (death/confirmed) and draw a world heatmap of it. The
-mortality rate is quite different all over the world. One possible
-reason can be under-report of confirmed cases. For example, the
-mortality rate in Africa is very unevenly distributed. The observed
-mortality rate in countries with low testing capacity may be very
-different from the true value. Another reason could be the availability
-of medical care, affecting the true mortality rate of COVID-19. The
-developing countries generally have a higher mortality rate than
-developed countries.
-
-``` r
+Then, we calculate the mortality rate (death/confirmed) and draw a world heatmap of it. The mortality rate is quite different all over the world. One possible reason can be under-report of confirmed cases. For example, the mortality rate in Africa is very unevenly distributed. The observed mortality rate in countries with low testing capacity may be very different from the true value. Another reason could be the availability of medical care, affecting the true mortality rate of COVID-19. The developing countries generally have a higher mortality rate than developed countries.
+```{r fig3}
 # Map the data in the same way as for the case per capita
 joinData <- joinCountryData2Map( total_all_pop ,
                                  joinCode = "ISO2",
                                  nameJoinColumn = "ISO2")
-```
-
-    ## 183 codes from your data successfully matched countries in the map
-    ## 1 codes from your data failed to match with a country code in the map
-    ## 58 codes from the map weren't represented in your data
-
-``` r
 mortality_map<-mapCountryData( joinData, nameColumnToPlot="mortality", addLegend=F, catMethod="quantiles",mapTitle = "Observed mortality rate (%) of COVID-19")
 do.call(addMapLegend,c(mortality_map,legendWidth=0.5,legendLabels="all",legendIntervals='page',sigFigs=2))
 ```
-
-![](README_files/figure-gfm/fig3-1.png)<!-- --> I categorized mortality
-as low (&lt;1%), medium (between 1% to 3%) and high (&gt;3%). Table
-below show the counts of countries with low/medium/high mortality by
-continent. Africa has the highest mortality rate which correspond with
-the pattern shown in the heat map above.
-
-``` r
+I categorized mortality as low (<1%), medium (between 1% to 3%) and high (>3%). Table below show the counts of countries with low/medium/high mortality by continent. Africa has the highest mortality rate which correspond with the pattern shown in the heat map above.
+```{r table2}
 # categorize mortality rate into low/medium/high groups
 total_mortality_continent <- total_all_pop %>%
   filter(!is.na(continent)) %>%
@@ -442,50 +344,22 @@ total_mortality_continent <- total_all_pop %>%
 # Display the count of countries by continent
 knitr::kable(table(total_mortality_continent$continent, total_mortality_continent$mortality_cat),
              caption="Counts of countries with low/medium/high mortality rate by continent")
+
 ```
 
-|          | low (&lt;1%) | medium (1%\~3%) | high (&gt;3%) |
-|:---------|-------------:|----------------:|--------------:|
-| Africa   |           10 |              30 |            14 |
-| Americas |            5 |              24 |             6 |
-| Asia     |           17 |              23 |             7 |
-| Europe   |           10 |              28 |             5 |
-| Oceania  |            1 |               3 |             0 |
-
-Counts of countries with low/medium/high mortality rate by continent
-
-I made a scatter plot of case per capita versus the mortality.
-Surprisingly, we did not see a clear correlation between them. The
-observed morality is not higher in the countries with higher cases per
-capita. As I stated above, the observed mortality in some countries may
-not reflect the truth.
-
-``` r
+I made a scatter plot of case per capita versus the mortality. Surprisingly, we did not see a clear correlation between them. The observed morality is not higher in the countries with higher cases per capita. As I stated above, the observed mortality in some countries may not reflect the truth. 
+```{r fig4}
 p2 <- ggplot(total_all_pop, aes(x=cases_per1k,y=mortality)) + 
   geom_point()+
   ggtitle('Cases per capita vs mortality rate per country')+
   xlab('Case per 1000 people')+
   ylab('Mortality rate (%)')
   ylim(0,10)
-```
-
-    ## <ScaleContinuousPosition>
-    ##  Range:  
-    ##  Limits:    0 --   10
-
-``` r
 p2
 ```
 
-![](README_files/figure-gfm/fig4-1.png)<!-- -->
-
-Now I would like to look at specific countries that I’m interested.
-First, I got total number of confirmed cases in a list of interested
-countries. I used bar plot comparing the confirmed cases among those
-countries. France and UK has higher total confirmed cases among the four
-European countries.
-
-``` r
+Now I would like to look at specific countries that I'm interested. First, I got total number of confirmed cases in a list of interested countries. I used bar plot comparing the confirmed cases among those countries. France and UK has higher total confirmed cases among the four European countries.
+```{r fig5}
 country_select <- c("France", "Germany", "United Kingdom", "Italy")
 ds_total <- summary_total(country = country_select) %>%
   mutate(confirmed_m = TotalConfirmed / 1000000)
@@ -504,13 +378,9 @@ p1 <-
   ylab('Number of confirmed cases (million)')
 p1
 ```
+Then I compare new cases per day in last month (i.e. 2021-09-01 to 2021-09-30) among the interested countries. UK had the most new cases among the four countries.
+```{r fig6}
 
-![](README_files/figure-gfm/fig5-1.png)<!-- --> Then I compare new cases
-per day in last month (i.e. 2021-09-01 to 2021-09-30) among the
-interested countries. UK had the most new cases among the four
-countries.
-
-``` r
 a <- lapply(country_select,new_period, start="2021-09-01",end="2021-09-30")
 new_cases_selected <- do.call(rbind,a)
 
@@ -523,16 +393,9 @@ p3 <- ggplot(new_cases_selected, aes(x=Country, y=new_case)) +
 p3
 ```
 
-![](README_files/figure-gfm/fig6-1.png)<!-- -->
+At last, I made time-series plot for the countries I interested. I plotted scatter plot of new cases in 2021 and overlay a time series line of the 7-day average of new cases. We can observe the trend of COIVD-19 in those countries clearly. For example, in UK, the case number drops significantly from Jan to May, but then has a new wave of new cases staring from June 2021.
+```{r fig7, fig.asp=2}
 
-At last, I made time-series plot for the countries I interested. I
-plotted scatter plot of new cases in 2021 and overlay a time series line
-of the 7-day average of new cases. We can observe the trend of COIVD-19
-in those countries clearly. For example, in UK, the case number drops
-significantly from Jan to May, but then has a new wave of new cases
-staring from June 2021.
-
-``` r
 b <- lapply(country_select,new_period, start="2021-01-01",end="2021-10-01")
 new_cases<- do.call(rbind,b)
 
@@ -555,20 +418,11 @@ p4 <- ggplot(new_all,aes(x=Date,color=factor(Country))) +
   ylab('New confirmed cases per day')+
   theme(legend.position='none')
 p4
+
 ```
 
-![](README_files/figure-gfm/fig7-1.png)<!-- -->
-
-My interested European countries all have COVID vaccine widely available
-from June this year. About 60% population got vaccinated till July (dash
-line) in those countries. I made a time-series plot of mortality rate to
-see if the rate decreased after middle of July. rate in UK climbing to
-about 60% in UK from Jan to Jun 2021, I plot another time series plot to
-see if the mortality rate dropped when vaccination rate increased. Based
-on the figure, the mortality rate decreased in the all the listed
-European countries after 60% population got vaccinated.
-
-``` r
+My interested European countries all have COVID vaccine widely available from June this year. About 60% population got vaccinated till July (dash line) in those countries. I made a time-series plot of mortality rate to see if the rate decreased after middle of July. rate in UK climbing to about 60% in UK from Jan to Jun 2021, I plot another time series plot to see if the mortality rate dropped when vaccination rate increased. Based on the figure, the mortality rate decreased in the all the listed European countries after 60% population got vaccinated.
+```{r fig8, fig.asp=2}
 p5<- ggplot(new_all,aes(x=Date,y=mortality_rate,color=factor(Country))) +
   geom_line(size=1.5) +
   geom_vline(xintercept = ymd(20210715), 
@@ -581,18 +435,11 @@ p5<- ggplot(new_all,aes(x=Date,y=mortality_rate,color=factor(Country))) +
   ylab('Mortality rate (%)')+
   theme(legend.position='none')
 p5
+
 ```
+# Wrap-Up
 
-![](README_files/figure-gfm/fig8-1.png)<!-- --> \# Wrap-Up
+To summarize everything I did in this vignette, I built functions to interact with some of the COVID-19 API endpoints, retrieved some of the data, and explored it using tables, numerical summaries, and data visualization. 
+The results above showed that the mortality rate decreased in the all the listed European countries after 60% population got vaccinated. Surprisingly, we did not see a clear correlation between them. The observed morality is not higher in the countries with higher cases per capita.
 
-To summarize everything I did in this vignette, I built functions to
-interact with some of the COVID-19 API endpoints, retrieved some of the
-data, and explored it using tables, numerical summaries, and data
-visualization. The results above showed that the mortality rate
-decreased in the all the listed European countries after 60% population
-got vaccinated. Surprisingly, we did not see a clear correlation between
-them. The observed morality is not higher in the countries with higher
-cases per capita.
-
-Writing this vignette helps me learning how to interact with an API and
-how to perform a basic exploratory data analysis.
+Writing this vignette helps me learning how to interact with an API and how to perform a basic exploratory data analysis. 
